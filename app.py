@@ -152,7 +152,7 @@ for msg in st.session_state.conversation:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------------- INPUT ----------------
+# INPUT
 user_input = st.chat_input("Type your message...")
 
 if user_input:
