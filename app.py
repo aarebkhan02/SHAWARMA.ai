@@ -9,7 +9,7 @@ client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
-    page_title="SHAWARMA",
+    page_title="SHAWARMAA",
     page_icon="🥙",
     layout="centered"
 )
@@ -82,7 +82,7 @@ body {
 
 # SIDEBAR
 with st.sidebar:
-    st.markdown("## 🥙 SHAWARMA")
+    st.markdown("## 🥙 SHAWARMAA")
     st.markdown("Friendly AI chatbot")
     st.divider()
     if st.button("Clear Chat"):
