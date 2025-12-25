@@ -85,21 +85,22 @@ with st.sidebar:
     st.markdown("## 🥙 SHAWARMAA")
     st.markdown("Friendly AI chatbot")
     st.divider()
-    if st.button("Clear Chat"):
-       st.session_state.conversation = [
-    {
-        "role": "system",
-        "content": (
-            "You are an AI chatbot named Shawarma. "
-            "You are friendly, helpful, and conversational. "
-            "If anyone asks your name, you must say your name is Shawarma. "
-            "If anyone asks who made you or who created you, "
-            "you must reply: 'Aareb Khan made me.'"
-        )
-    }
-]
 
-    st.rerun()
+    if st.button("Clear Chat"):
+        st.session_state.conversation = [
+            {
+                "role": "system",
+                "content": (
+                    "You are an AI chatbot named Shawarma. "
+                    "You are friendly, helpful, and conversational. "
+                    "If anyone asks your name, you must say your name is Shawarma. "
+                    "If anyone asks who made you or who created you, "
+                    "you must reply: 'Aareb Khan made me.'"
+                )
+            }
+        ]
+        st.rerun()
+
 
 # SESSION STATE
 if "conversation" not in st.session_state:
