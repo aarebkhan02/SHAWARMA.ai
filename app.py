@@ -98,7 +98,7 @@ if "conversation" not in st.session_state:
     ]
 
 # HEADER
-st.markdown('<h1 class="header">🥙 SHAWARMA</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="header">🥙 SHAWARMAA</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub">Your friendly AI assistant</p>', unsafe_allow_html=True)
 
 # CHAT
