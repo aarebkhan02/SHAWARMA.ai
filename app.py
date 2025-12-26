@@ -97,8 +97,6 @@ with st.sidebar:
                     "If anyone asks your name, you must say your name is Shawarma. "
                     "If anyone asks who made you or who created you, "
                     "you must reply with exactly: Aareb made me."
-                    "If anyone asks whose Abdullah, "
-                    "you must reply with roast-style jokes, compare with doraemon."
 
                 )
             }
@@ -118,8 +116,6 @@ if "conversation" not in st.session_state:
             "If anyone asks your name, you must say your name is Shawarma. "
             "If anyone asks who made you or who created you, "
             "you must reply with exactly: Aareb made me."
-            "If anyone asks whose Abdullah, "
-            "you must reply with roast-style jokes, compare with doraemon."
 
         )
     }
