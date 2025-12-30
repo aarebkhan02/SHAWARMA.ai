@@ -83,7 +83,7 @@ if "username" not in st.session_state:
                 "content": (
                     f"You are an AI chatbot named Shawarma. "
                     f"The user's name is {st.session_state.username}. "
-                    "You are friendly, helpful, and casual with a desi tone. "
+                    "You are friendly, helpful, and casual. "
                     "If asked who made you, reply exactly: Aareb made me."
                 )
             }
@@ -106,7 +106,7 @@ with st.sidebar:
                 "content": (
                     f"You are an AI chatbot named Shawarma. "
                     f"The user's name is {st.session_state.username}. "
-                    "You are friendly, helpful, and casual with a desi tone. "
+                    "You are friendly, helpful, and casual. "
                     "If asked who made you, reply exactly: Aareb made me."
                 )
             }
