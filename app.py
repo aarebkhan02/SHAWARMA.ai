@@ -4,31 +4,22 @@ import os
 from pymongo import MongoClient
 from datetime import datetime
 
-# ---------- MONGO DB SETUP ----------
-mongo_client = MongoClient(st.secrets["MONGODB_URL"])
+
+client = Groq(api_key=os.environ["GROQ_API_KEY"])
+
+MONGO_URI = st.secrets["MONGODB_URL"]
+mongo_client = MongoClient(MONGO_URI)
 db = mongo_client["shawarma_db"]
-users_collection = db["users"]
+chats_collection = db["chats"]
 
-# ---------- GET USER NAME ----------
-if "username" not in st.session_state:
-    st.session_state.username = st.text_input("Enter your name to start:", "")
 
-if not st.session_state.username:
-    st.stop()
-
-username = st.session_state.username
-
-# ---------- PAGE CONFIG ----------
 st.set_page_config(
     page_title="SHAWARMAA",
     page_icon="🥙",
     layout="centered"
 )
 
-# ---------- GROQ CLIENT ----------
-client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
-# ---------- CSS ----------
 st.markdown("""
 <style>
 body { background-color: #0e0e0e; }
@@ -43,55 +34,82 @@ body { background-color: #0e0e0e; }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- LOAD OR INIT USER CONVERSATION ----------
-user_data = users_collection.find_one({"username": username})
-if not user_data:
-    st.session_state.conversation = [
-        {"type": "system", "content": "You are Shawarma, a friendly AI chatbot. Be casual and desi."}
-    ]
-    users_collection.insert_one({"username": username, "conversation": st.session_state.conversation})
-else:
-    st.session_state.conversation = user_data["conversation"]
 
-# ---------- HEADER ----------
+if "user_name" not in st.session_state:
+    st.session_state.user_name = st.text_input("Enter your name to start chat:", key="name_input")
+    if not st.session_state.user_name:
+        st.stop()
+
+user_name = st.session_state.user_name
+
+
+user_chat = chats_collection.find_one({"user": user_name})
+if user_chat is None:
+    chats_collection.insert_one({"user": user_name, "messages": []})
+    user_chat = {"user": user_name, "messages": []}
+
+
+if "conversation" not in st.session_state:
+    # Load previous messages if any
+    conversation = []
+    for msg in user_chat["messages"]:
+        if msg["type"] == "user":
+            conversation.append({"role": "user", "content": msg["user"]})
+        elif msg["type"] == "shawarma":
+            conversation.append({"role": "assistant", "content": msg["shawarma"]})
+    # If no messages, initialize with system prompt
+    if not conversation:
+        conversation = [
+            {
+                "role": "system",
+                "content": (
+                    "You are an AI chatbot named Shawarma. "
+                    "You are friendly, helpful, and casual with a desi tone. "
+                    "If anyone asks your name, reply exactly: Shawarma. "
+                    "If anyone asks who made you, reply exactly: Aareb made me."
+                )
+            }
+        ]
+    st.session_state.conversation = conversation
+
+
 st.markdown('<h1 class="header">🥙 SHAWARMAA</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub">Your friendly AI assistant</p>', unsafe_allow_html=True)
 
-# ---------- CHAT DISPLAY ----------
+
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 for msg in st.session_state.conversation:
-    if msg["type"] == "user":
-        st.markdown(f'<div class="msg-row user-row"><div class="user-msg">{msg["user"]}</div></div>', unsafe_allow_html=True)
-    elif msg["type"] == "shawarma":
-        st.markdown(f'<div class="msg-row bot-row"><div class="bot-msg">{msg["shawarma"]}</div></div>', unsafe_allow_html=True)
+    if msg["role"] == "user":
+        st.markdown(f'<div class="msg-row user-row"><div class="user-msg">{msg["content"]}</div></div>', unsafe_allow_html=True)
+    elif msg["role"] == "assistant":
+        st.markdown(f'<div class="msg-row bot-row"><div class="bot-msg">{msg["content"]}</div></div>', unsafe_allow_html=True)
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------- INPUT ----------
+
 user_input = st.chat_input("Type your message...")
 
-if user_input:
-    # Save user message
-    st.session_state.conversation.append({"type": "user", "user": user_input})
-    users_collection.update_one(
-        {"username": username},
-        {"$push": {"conversation": {"type": "user", "user": user_input}}}
+def save_to_mongo(user, user_text, bot_text):
+    chats_collection.update_one(
+        {"user": user},
+        {"$push": {"messages": {"$each": [
+            {"type": "user", "user": user_text},
+            {"type": "shawarma", "shawarma": bot_text}
+        ]}}}
     )
 
-    # Get AI response
+if user_input:
+    st.session_state.conversation.append({"role": "user", "content": user_input})
+
     res = client.chat.completions.create(
         model="llama-3.1-8b-instant",
-        messages=[{"role":"system","content":"You are Shawarma, friendly AI."}] + [{"role":"user","content": user_input}],
+        messages=st.session_state.conversation,
         temperature=0.7,
         max_tokens=200
     )
 
     assistant_reply = res.choices[0].message.content
+    st.session_state.conversation.append({"role": "assistant", "content": assistant_reply})
 
-    # Save assistant message
-    st.session_state.conversation.append({"type": "shawarma", "shawarma": assistant_reply})
-    users_collection.update_one(
-        {"username": username},
-        {"$push": {"conversation": {"type": "shawarma", "shawarma": assistant_reply}}}
-    )
+    save_to_mongo(user_name, user_input, assistant_reply)
 
     st.rerun()
