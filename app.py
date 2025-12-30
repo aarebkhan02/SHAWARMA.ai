@@ -7,7 +7,7 @@ import uuid
 
 # ---------------- API CLIENTS ----------------
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
-mongo_client = MongoClient(st.secrets["MONGO_URI"])
+mongo_client = MongoClient(st.secrets["MONGODB_URL"])
 db = mongo_client["shawarma_db"]
 chats_collection = db["chats"]
 
