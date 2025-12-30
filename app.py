@@ -65,7 +65,7 @@ with st.sidebar:
                     )
                 }
             ]
-        st.experimental_rerun()
+        st.rerun()
 
 
 user_chat = chats_collection.find_one({"user": user_name})
@@ -134,4 +134,4 @@ if user_input:
 
     save_to_mongo(user_name, user_input, assistant_reply)
 
-    st.experimental_rerun()
+    st.rerun()
