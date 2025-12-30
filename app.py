@@ -4,11 +4,7 @@ from pymongo import MongoClient
 import os
 
 # ---------------- PAGE CONFIG ----------------
-st.set_page_config(
-    page_title="SHAWARMAA",
-    page_icon="🥙",
-    layout="centered"
-)
+st.set_page_config(page_title="SHAWARMAA", page_icon="🥙", layout="centered")
 
 # ---------------- CSS ----------------
 st.markdown("""
@@ -27,13 +23,13 @@ body { background-color: #0e0e0e; }
 
 # ---------------- DATABASE ----------------
 mongo_uri = st.secrets["MONGODB_URL"]
-client_db = MongoClient(mongo_uri)
-db = client_db["shawarmaa_db"]
+db_client = MongoClient(mongo_uri)
+db = db_client["shawarmaa_db"]
 chats_col = db["chats"]
 
-# ---------------- USER NAME INPUT ----------------
+# ---------------- USERNAME ----------------
 if "username" not in st.session_state:
-    st.session_state.username = st.text_input("Enter your name to start the chat:")
+    st.session_state.username = st.text_input("Enter your name to start:")
 
 if not st.session_state.username:
     st.stop()
@@ -45,22 +41,18 @@ groq_client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 # ---------------- SESSION STATE ----------------
 if "conversation" not in st.session_state:
-    # Load previous messages if any
-    user_chat = chats_col.find_one({"user": username})
-    if user_chat:
-        st.session_state.conversation = user_chat["messages"]
+    # Load previous conversation if exists
+    user_data = chats_col.find_one({"user": username})
+    if user_data:
+        st.session_state.conversation = user_data["messages"]
     else:
         st.session_state.conversation = [
-            {
-                "type": "system",
-                "system": (
-                    "You are an AI chatbot named Shawarma. "
-                    "You are friendly, helpful, and conversational. "
-                    "You are friendly, helpful, and casual with a desi tone. "
-                    "If anyone asks your name, you must say your name is Shawarma. "
-                    "If anyone asks who made you or who created you, you must reply with exactly: Aareb made me."
-                )
-            }
+            {"type": "system", "system": (
+                "You are an AI chatbot named Shawarma. "
+                "Friendly, helpful, casual with desi tone. "
+                "If anyone asks your name, reply 'Shawarma'. "
+                "If anyone asks who made you, reply 'Aareb made me'."
+            )}
         ]
 
 # ---------------- SIDEBAR ----------------
@@ -69,18 +61,7 @@ with st.sidebar:
     st.markdown("Friendly AI chatbot")
     st.divider()
     if st.button("Clear Chat"):
-        st.session_state.conversation = [
-            {
-                "type": "system",
-                "system": (
-                    "You are an AI chatbot named Shawarma. "
-                    "You are friendly, helpful, and conversational. "
-                    "You are friendly, helpful, and casual with a desi tone. "
-                    "If anyone asks your name, you must say your name is Shawarma. "
-                    "If anyone asks who made you or who created you, you must reply with exactly: Aareb made me."
-                )
-            }
-        ]
+        st.session_state.conversation = [st.session_state.conversation[0]]  # keep system prompt
         chats_col.update_one(
             {"user": username},
             {"$set": {"messages": st.session_state.conversation}},
@@ -104,28 +85,30 @@ st.markdown('</div>', unsafe_allow_html=True)
 # ---------------- USER INPUT ----------------
 user_input = st.chat_input("Type your message...")
 if user_input:
+    # Add user message
     st.session_state.conversation.append({"type": "user", "user": user_input})
 
-    # ---------------- GROQ RESPONSE ----------------
-    messages_for_groq = []
+    # Prepare Groq messages
+    groq_messages = []
     for m in st.session_state.conversation:
         if m["type"] == "system":
-            messages_for_groq.append({"role": "system", "content": m["system"]})
+            groq_messages.append({"role": "system", "content": m["system"]})
         elif m["type"] == "user":
-            messages_for_groq.append({"role": "user", "content": m["user"]})
+            groq_messages.append({"role": "user", "content": m["user"]})
         elif m["type"] == "shawarma":
-            messages_for_groq.append({"role": "assistant", "content": m["shawarma"]})
+            groq_messages.append({"role": "assistant", "content": m["shawarma"]})
 
+    # Get AI response
     res = groq_client.chat.completions.create(
         model="llama-3.1-8b-instant",
-        messages=messages_for_groq,
+        messages=groq_messages,
         temperature=0.7,
         max_tokens=200
     )
     assistant_reply = res.choices[0].message.content
     st.session_state.conversation.append({"type": "shawarma", "shawarma": assistant_reply})
 
-    # ---------------- SAVE TO MONGODB ----------------
+    # Save to MongoDB
     chats_col.update_one(
         {"user": username},
         {"$set": {"messages": st.session_state.conversation}},
