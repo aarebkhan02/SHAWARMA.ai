@@ -2,10 +2,10 @@ import streamlit as st
 from groq import Groq
 import os
 from pymongo import MongoClient
-from datetime import datetime
 
 
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
+
 
 MONGO_URI = st.secrets["MONGODB_URL"]
 mongo_client = MongoClient(MONGO_URI)
@@ -43,6 +43,31 @@ if "user_name" not in st.session_state:
 user_name = st.session_state.user_name
 
 
+with st.sidebar:
+    st.markdown("## 🥙 SHAWARMAA")
+    st.markdown("Friendly AI chatbot")
+    st.divider()
+
+    if st.button("Clear Chat"):
+        chats_collection.update_one(
+            {"user": user_name},
+            {"$set": {"messages": []}}
+        )
+        if "conversation" in st.session_state:
+            st.session_state.conversation = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an AI chatbot named Shawarma. "
+                        "You are friendly, helpful, and casual with a desi tone. "
+                        "If anyone asks your name, reply exactly: Shawarma. "
+                        "If anyone asks who made you, reply exactly: Aareb made me."
+                    )
+                }
+            ]
+        st.experimental_rerun()
+
+
 user_chat = chats_collection.find_one({"user": user_name})
 if user_chat is None:
     chats_collection.insert_one({"user": user_name, "messages": []})
@@ -50,14 +75,12 @@ if user_chat is None:
 
 
 if "conversation" not in st.session_state:
-    # Load previous messages if any
     conversation = []
     for msg in user_chat["messages"]:
         if msg["type"] == "user":
             conversation.append({"role": "user", "content": msg["user"]})
         elif msg["type"] == "shawarma":
             conversation.append({"role": "assistant", "content": msg["shawarma"]})
-    # If no messages, initialize with system prompt
     if not conversation:
         conversation = [
             {
@@ -75,7 +98,6 @@ if "conversation" not in st.session_state:
 
 st.markdown('<h1 class="header">🥙 SHAWARMAA</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub">Your friendly AI assistant</p>', unsafe_allow_html=True)
-
 
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 for msg in st.session_state.conversation:
@@ -112,4 +134,4 @@ if user_input:
 
     save_to_mongo(user_name, user_input, assistant_reply)
 
-    st.rerun()
+    st.experimental_rerun()
