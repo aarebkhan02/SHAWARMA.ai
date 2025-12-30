@@ -1,13 +1,9 @@
 import streamlit as st
 from groq import Groq
-import os
+from pymongo import MongoClient
+from datetime import datetime
 
 
-client = Groq(api_key=os.environ["GROQ_API_KEY"])
-
-
-
-# ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="SHAWARMAA",
     page_icon="🥙",
@@ -15,14 +11,31 @@ st.set_page_config(
 )
 
 
+groq_client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
+
+mongo_client = MongoClient(st.secrets["MONGODB_URL"])
+db = mongo_client["shawarma_db"]
+chats = db["chats"]
+
+
+def save_message(username, role, content):
+    chats.insert_one({
+        "username": username,
+        "role": role,
+        "content": content,
+        "timestamp": datetime.utcnow()
+    })
+
+def load_messages(username):
+    return list(
+        chats.find({"username": username}).sort("timestamp", 1)
+    )
 
 # ---------------- CSS ----------------
 st.markdown("""
 <style>
-body {
-    background-color: #0e0e0e;
-}
+body { background-color: #0e0e0e; }
 
 .chat-container {
     display: flex;
@@ -31,18 +44,10 @@ body {
     padding-bottom: 20px;
 }
 
-.msg-row {
-    width: 100%;
-    display: flex;
-}
+.msg-row { display: flex; width: 100%; }
 
-.user-row {
-    justify-content: flex-end;
-}
-
-.bot-row {
-    justify-content: flex-start;
-}
+.user-row { justify-content: flex-end; }
+.bot-row { justify-content: flex-start; }
 
 .user-msg {
     background-color: #85409D;
@@ -50,9 +55,6 @@ body {
     padding: 14px 18px;
     border-radius: 18px 18px 4px 18px;
     max-width: 72%;
-    font-size: 15px;
-    line-height: 1.4;
-    word-wrap: break-word;
 }
 
 .bot-msg {
@@ -61,116 +63,120 @@ body {
     padding: 14px 18px;
     border-radius: 18px 18px 18px 4px;
     max-width: 72%;
-    font-size: 15px;
-    line-height: 1.4;
-    word-wrap: break-word;
 }
 
-.header {
-    text-align: center;
-    color: #92487A;
-    margin-bottom: 4px;
-}
-
-.sub {
-    text-align: center;
-    color: #aaa;
-    margin-bottom: 25px;
-}
+.header { text-align: center; color: #92487A; }
+.sub { text-align: center; color: #aaa; }
 </style>
 """, unsafe_allow_html=True)
 
-# SIDEBAR
-with st.sidebar:
-    st.markdown("## 🥙 SHAWARMAA")
-    st.markdown("Friendly AI chatbot")
-    st.divider()
 
-    if st.button("Clear Chat"):
+if "username" not in st.session_state:
+    st.markdown("##  Welcome to SHAWARMAA")
+    name = st.text_input("Enter your name to continue")
+
+    if st.button("Start Chat") and name.strip():
+        st.session_state.username = name.strip()
         st.session_state.conversation = [
             {
                 "role": "system",
                 "content": (
-                    "You are an AI chatbot named Shawarma. "
-                    "You are friendly, helpful, and conversational. "
-                    "You are friendly, helpful, and casual with a desi tone."
-                    "If anyone asks your name, you must say your name is Shawarma. "
-                    "If anyone asks who made you or who created you, "
-                    "you must reply with exactly: Aareb made me."
+                    f"You are an AI chatbot named Shawarma. "
+                    f"The user's name is {st.session_state.username}. "
+                    "You are friendly, helpful, and casual with a desi tone. "
+                    "If asked who made you, reply exactly: Aareb made me."
+                )
+            }
+        ]
+        st.rerun()
 
+    st.stop()
+
+
+with st.sidebar:
+    st.markdown(f"## 🥙 SHAWARMAA")
+    st.markdown(f" User: **{st.session_state.username}**")
+    st.divider()
+
+    if st.button("Clear Chat"):
+        chats.delete_many({"username": st.session_state.username})
+        st.session_state.conversation = [
+            {
+                "role": "system",
+                "content": (
+                    f"You are an AI chatbot named Shawarma. "
+                    f"The user's name is {st.session_state.username}. "
+                    "You are friendly, helpful, and casual with a desi tone. "
+                    "If asked who made you, reply exactly: Aareb made me."
                 )
             }
         ]
         st.rerun()
 
 
-# SESSION STATE
 if "conversation" not in st.session_state:
-    st.session_state.conversation = [
-    {
-        "role": "system",
-        "content": (
-            "You are an AI chatbot named Shawarma. "
-            "You are friendly, helpful, and conversational. "
-            "You are friendly, helpful, and casual with a desi tone."
-            "If anyone asks your name, you must say your name is Shawarma. "
-            "If anyone asks who made you or who created you, "
-            "you must reply with exactly: Aareb made me."
+    saved = load_messages(st.session_state.username)
+    if saved:
+        st.session_state.conversation = [
+            {"role": m["role"], "content": m["content"]} for m in saved
+        ]
+    else:
+        st.session_state.conversation = [
+            {
+                "role": "system",
+                "content": (
+                    f"You are an AI chatbot named Shawarma. "
+                    f"The user's name is {st.session_state.username}. "
+                    "You are friendly, helpful, and casual with a desi tone. "
+                    "If asked who made you, reply exactly: Aareb made me."
+                )
+            }
+        ]
 
-        )
-    }
-]
 
-
-# HEADER
 st.markdown('<h1 class="header">🥙 SHAWARMAA</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub">Your friendly AI assistant</p>', unsafe_allow_html=True)
+st.markdown(
+    f'<p class="sub">Hello {st.session_state.username} </p>',
+    unsafe_allow_html=True
+)
 
-# CHAT
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
 for msg in st.session_state.conversation:
     if msg["role"] == "user":
         st.markdown(
-            f"""
-            <div class="msg-row user-row">
-                <div class="user-msg">{msg["content"]}</div>
-            </div>
-            """,
+            f'<div class="msg-row user-row"><div class="user-msg">{msg["content"]}</div></div>',
             unsafe_allow_html=True
         )
-
     elif msg["role"] == "assistant":
         st.markdown(
-            f"""
-            <div class="msg-row bot-row">
-                <div class="bot-msg">{msg["content"]}</div>
-            </div>
-            """,
+            f'<div class="msg-row bot-row"><div class="bot-msg">{msg["content"]}</div></div>',
             unsafe_allow_html=True
         )
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# INPUT
+
 user_input = st.chat_input("Type your message...")
 
 if user_input:
     st.session_state.conversation.append(
         {"role": "user", "content": user_input}
     )
+    save_message(st.session_state.username, "user", user_input)
 
-    res = client.chat.completions.create(
+    response = groq_client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=st.session_state.conversation,
         temperature=0.7,
         max_tokens=200
     )
 
-    assistant_reply = res.choices[0].message.content
+    assistant_reply = response.choices[0].message.content
 
     st.session_state.conversation.append(
         {"role": "assistant", "content": assistant_reply}
     )
+    save_message(st.session_state.username, "assistant", assistant_reply)
 
     st.rerun()
