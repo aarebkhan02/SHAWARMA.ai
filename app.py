@@ -16,23 +16,35 @@ groq_client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 mongo_client = MongoClient(st.secrets["MONGODB_URL"])
 db = mongo_client["shawarma_db"]
-chats = db["chats"]
+users = db["users"]   # one document per user
 
 
-def save_message(username, role, content):
-    chats.insert_one({
-        "username": username,
-        "role": role,
-        "content": content,
-        "timestamp": datetime.utcnow()
-    })
+def get_user_doc(username):
+    user = users.find_one({"username": username})
+    if not user:
+        users.insert_one({
+            "username": username,
+            "conversation": [],
+            "createdAt": datetime.utcnow()
+        })
+        user = users.find_one({"username": username})
+    return user
 
-def load_messages(username):
-    return list(
-        chats.find({"username": username}).sort("timestamp", 1)
+def save_chat_pair(username, user_msg, bot_msg):
+    users.update_one(
+        {"username": username},
+        {
+            "$push": {
+                "conversation": {
+                    "user": user_msg,
+                    "bot": bot_msg
+                }
+            },
+            "$set": {"updatedAt": datetime.utcnow()}
+        }
     )
 
-# ---------------- CSS ----------------
+
 st.markdown("""
 <style>
 body { background-color: #0e0e0e; }
@@ -45,7 +57,6 @@ body { background-color: #0e0e0e; }
 }
 
 .msg-row { display: flex; width: 100%; }
-
 .user-row { justify-content: flex-end; }
 .bot-row { justify-content: flex-start; }
 
@@ -72,73 +83,48 @@ body { background-color: #0e0e0e; }
 
 
 if "username" not in st.session_state:
-    st.markdown("##  Welcome to SHAWARMAA")
-    name = st.text_input("Enter your name to continue")
+    st.markdown("## 👋 Welcome to SHAWARMAA")
+    name = st.text_input("Enter your name")
 
     if st.button("Start Chat") and name.strip():
         st.session_state.username = name.strip()
-        st.session_state.conversation = [
-            {
-                "role": "system",
-                "content": (
-                    f"You are an AI chatbot named Shawarma. "
-                    f"The user's name is {st.session_state.username}. "
-                    "You are friendly, helpful, and casual. "
-                    "If asked who made you, reply exactly: Aareb made me."
-                )
-            }
-        ]
+        get_user_doc(st.session_state.username)
+        st.session_state.conversation = []
         st.rerun()
 
     st.stop()
 
+username = st.session_state.username
+user_doc = get_user_doc(username)
+
 
 with st.sidebar:
-    st.markdown(f"## 🥙 SHAWARMAA")
-    st.markdown(f" User: **{st.session_state.username}**")
+    st.markdown("## 🥙 SHAWARMAA")
+    st.markdown(f"👤 **{username}**")
     st.divider()
 
     if st.button("Clear Chat"):
-        chats.delete_many({"username": st.session_state.username})
-        st.session_state.conversation = [
-            {
-                "role": "system",
-                "content": (
-                    f"You are an AI chatbot named Shawarma. "
-                    f"The user's name is {st.session_state.username}. "
-                    "You are friendly, helpful, and casual. "
-                    "If asked who made you, reply exactly: Aareb made me."
-                )
-            }
-        ]
+        users.update_one(
+            {"username": username},
+            {"$set": {"conversation": []}}
+        )
+        st.session_state.conversation = []
         st.rerun()
 
 
-if "conversation" not in st.session_state:
-    saved = load_messages(st.session_state.username)
-    if saved:
-        st.session_state.conversation = [
-            {"role": m["role"], "content": m["content"]} for m in saved
-        ]
-    else:
-        st.session_state.conversation = [
-            {
-                "role": "system",
-                "content": (
-                    f"You are an AI chatbot named Shawarma. "
-                    f"The user's name is {st.session_state.username}. "
-                    "You are friendly, helpful, and casual with a desi tone. "
-                    "If asked who made you, reply exactly: Aareb made me."
-                )
-            }
-        ]
+st.session_state.conversation = []
+
+for pair in user_doc["conversation"]:
+    st.session_state.conversation.append(
+        {"role": "user", "content": pair["user"]}
+    )
+    st.session_state.conversation.append(
+        {"role": "assistant", "content": pair["bot"]}
+    )
 
 
 st.markdown('<h1 class="header">🥙 SHAWARMAA</h1>', unsafe_allow_html=True)
-st.markdown(
-    f'<p class="sub">Hello {st.session_state.username} </p>',
-    unsafe_allow_html=True
-)
+st.markdown(f'<p class="sub">Hello {username} </p>', unsafe_allow_html=True)
 
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
@@ -148,7 +134,7 @@ for msg in st.session_state.conversation:
             f'<div class="msg-row user-row"><div class="user-msg">{msg["content"]}</div></div>',
             unsafe_allow_html=True
         )
-    elif msg["role"] == "assistant":
+    else:
         st.markdown(
             f'<div class="msg-row bot-row"><div class="bot-msg">{msg["content"]}</div></div>',
             unsafe_allow_html=True
@@ -160,23 +146,18 @@ st.markdown('</div>', unsafe_allow_html=True)
 user_input = st.chat_input("Type your message...")
 
 if user_input:
-    st.session_state.conversation.append(
+    temp_convo = st.session_state.conversation + [
         {"role": "user", "content": user_input}
-    )
-    save_message(st.session_state.username, "user", user_input)
+    ]
 
     response = groq_client.chat.completions.create(
         model="llama-3.1-8b-instant",
-        messages=st.session_state.conversation,
+        messages=temp_convo,
         temperature=0.7,
         max_tokens=200
     )
 
-    assistant_reply = response.choices[0].message.content
+    bot_reply = response.choices[0].message.content
 
-    st.session_state.conversation.append(
-        {"role": "assistant", "content": assistant_reply}
-    )
-    save_message(st.session_state.username, "assistant", assistant_reply)
-
+    save_chat_pair(username, user_input, bot_reply)
     st.rerun()
