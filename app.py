@@ -7,7 +7,7 @@ client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 
 
-# ---------------- PAGE CONFIG ----------------
+# PAGE CONFIG
 st.set_page_config(
     page_title="SHAWARMAA",
     page_icon="🥙",
@@ -17,7 +17,7 @@ st.set_page_config(
 
 
 
-# ---------------- CSS ----------------
+
 st.markdown("""
 <style>
 body {
@@ -93,7 +93,7 @@ with st.sidebar:
                 "content": (
                     "You are an AI chatbot named Shawarma. "
                     "You are friendly, helpful, and conversational. "
-                    "You are friendly, helpful, and casual with a desi tone."
+                    "You are friendly, helpful, and casual with a friendly tone."
                     "If anyone asks your name, you must say your name is Shawarma. "
                     "If anyone asks who made you or who created you, "
                     "you must reply with exactly: Aareb made me."
@@ -112,7 +112,7 @@ if "conversation" not in st.session_state:
         "content": (
             "You are an AI chatbot named Shawarma. "
             "You are friendly, helpful, and conversational. "
-            "You are friendly, helpful, and casual with a desi tone."
+            "You are friendly, helpful, and casual  with a friendly tone."
             "If anyone asks your name, you must say your name is Shawarma. "
             "If anyone asks who made you or who created you, "
             "you must reply with exactly: Aareb made me."
