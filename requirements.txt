@@ -2,3 +2,4 @@ streamlit
 groq
 pymongo
 datetime
+tavily-python
