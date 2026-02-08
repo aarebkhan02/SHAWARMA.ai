@@ -182,8 +182,8 @@ from groq import Groq
 from tavily import TavilyClient
 import os
 
-from dotenv import load_dotenv
-load_dotenv() 
+# from dotenv import load_dotenv
+# load_dotenv() 
 
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 tavily = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
