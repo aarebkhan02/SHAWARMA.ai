@@ -199,9 +199,20 @@ st.markdown("""
 <style>
 body { background-color: #0e0e0e; }
 .chat-container { display: flex; flex-direction: column; gap: 14px; padding-bottom: 20px; }
-.msg-row { width: 100%; display: flex; }
-.user-row { justify-content: flex-end; }
-.bot-row { justify-content: flex-start; }
+.msg-row { 
+    width: 100%; 
+    display: flex; 
+    margin-top: 6px;
+}
+
+.user-row { 
+    justify-content: flex-end; 
+}
+
+.bot-row { 
+    justify-content: flex-start; 
+    margin-top: 12px;  /* gap between user and AI */
+}
 .user-msg {
     background-color: #85409D;
     color: white;
@@ -261,6 +272,7 @@ with st.sidebar:
                 "If anyone asks your name, you must say your name is Shawarma. "
                 "If anyone asks who made you or who created you, "
                 "you must reply with exactly: Aareb made me."
+                "If anyone says end the conversation or goodbye or bye, you must reply with A shawarma reference."
             )
         }]
         st.rerun()
@@ -276,6 +288,7 @@ if "conversation" not in st.session_state:
             "If anyone asks your name, you must say your name is Shawarma. "
             "If anyone asks who made you or who created you, "
             "you must reply with exactly: Aareb made me."
+            "If anyone says end the conversation or goodbye or bye, you must reply with A shawarma reference."
         )
     }]
 
