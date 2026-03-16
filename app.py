@@ -239,7 +239,7 @@ body { background-color: #0e0e0e; }
     100% { opacity: 0.4; }
 }
 
-.header { text-align: center; color: #92487A; }
+.header { text-align: center; color: #92487A; margin-bottom: 4px; }
 .sub { text-align: center; color: #aaa; margin-bottom: 25px; }
 .sub1 { text-align: center; color: #aaa; }
 </style>
