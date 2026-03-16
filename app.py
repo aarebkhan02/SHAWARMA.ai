@@ -241,6 +241,7 @@ body { background-color: #0e0e0e; }
 
 .header { text-align: center; color: #92487A; margin-bottom: 4px; }
 .sub { text-align: center; color: #aaa; margin-bottom: 25px; }
+.sub1 { text-align: center; color: #aaa; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -280,6 +281,7 @@ if "conversation" not in st.session_state:
 
 # HEADER
 st.markdown('<h1 class="header">🥙 SHAWARMAA</h1>', unsafe_allow_html=True)
+st.markdown('<p class="sub1">With an extra A :)</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub">Your friendly AI assistant</p>', unsafe_allow_html=True)
 
 # CHAT UI
