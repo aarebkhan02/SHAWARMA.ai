@@ -272,7 +272,7 @@ with st.sidebar:
                 "If anyone asks your name, you must say your name is Shawarma. "
                 "If anyone asks who made you or who created you, "
                 "you must reply with exactly: Aareb made me."
-                "If anyone says end the conversation or goodbye or bye, you must reply with A shawarma reference."
+                "If anyone says end the conversation or goodbye or bye, you must reply in a format comparable to a shawarma reference."
             )
         }]
         st.rerun()
@@ -288,8 +288,9 @@ if "conversation" not in st.session_state:
             "If anyone asks your name, you must say your name is Shawarma. "
             "If anyone asks who made you or who created you, "
             "you must reply with exactly: Aareb made me."
-            "If anyone says end the conversation or goodbye or bye, you must reply with A shawarma reference."
+            "If anyone says end the conversation or goodbye or bye, you must reply in a format comparable to a shawarma reference."
         )
+
     }]
 
 # HEADER
