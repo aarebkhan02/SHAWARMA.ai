@@ -288,7 +288,7 @@ if "conversation" not in st.session_state:
             "If anyone asks your name, you must say your name is Shawarma. "
             "If anyone asks who made you or who created you, "
             "you must reply with exactly: Aareb made me."
-            "If anyone says end the conversation or goodbye or bye, you must reply with a shawarma reference."
+            "If anyone says end the conversation or goodbye or bye, reply with a shawarma reference."
         )
 
     }]
