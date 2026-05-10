@@ -680,7 +680,7 @@ Use this information if relevant.
 
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
-        messages=enhanced_messages[-10:],
+        messages=enhanced_messages,
         temperature=0.5,
         max_tokens=120,
         stream=True
