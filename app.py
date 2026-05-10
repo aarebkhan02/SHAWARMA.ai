@@ -194,7 +194,6 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 
-
 # =========================
 # API CLIENTS
 # =========================
@@ -215,7 +214,7 @@ def load_resume():
     return text
 
 
-def chunk_text(text, chunk_size=400):
+def chunk_text(text, chunk_size=250):
 
     chunks = []
 
@@ -238,9 +237,9 @@ def load_rag():
     resume_chunks = chunk_text(resume_text)
 
     chunk_embeddings = embed_model.encode(
-        resume_chunks,
-        
-    )
+    resume_chunks,
+    convert_to_numpy=True
+)
 
     dimension = len(chunk_embeddings[0])
 
@@ -253,21 +252,17 @@ embed_model, index, resume_chunks = load_rag()
 
 
 
-def search_resume(query, k=1):
+def search_resume(query, k=2):
 
     query_embedding = embed_model.encode(
         [query],
-        
+        convert_to_numpy=True
     )
 
     distances, indices = index.search(
         query_embedding.astype("float32"),
         k
     )
-
-    # similarity threshold
-    if distances[0][0] > 2.0:
-        return ""
 
     results = []
 
@@ -277,7 +272,18 @@ def search_resume(query, k=1):
     return "\n".join(results)
 
 
-resume_keywords = [ "aareb", "resume", "skills", "projects", "internship", "experience", "education", "who made you", "developer", "creator" ]
+resume_keywords = [
+    "aareb",
+    "resume",
+    "skills",
+    "projects",
+    "internship",
+    "experience",
+    "education",
+    "who made you",
+    "developer",
+    "creator"
+]
 
 # =========================
 # PAGE CONFIG
@@ -399,7 +405,6 @@ with st.sidebar:
                     "You are Shawarma, a friendly AI chatbot. "
                     "Keep responses short, conversational, and helpful. "
                     "If asked your name, say your name is Shawarma. "
-                    "If asked about Aareb, use the provided resume context only. "
                     "If asked who made you, reply exactly: Aareb made me."
                 )
             }
@@ -420,7 +425,6 @@ if "conversation" not in st.session_state:
                 "You are Shawarma, a friendly AI chatbot. "
                 "Keep responses short, conversational, and helpful. "
                 "If asked your name, say your name is Shawarma. "
-                "If asked about Aareb, use the provided resume context only. "
                 "If asked who made you, reply exactly: Aareb made me."
             )
         }
@@ -636,23 +640,20 @@ Use this information if relevant.
 
     if resume_data:
 
-        enhanced_messages.append({
-            "role": "system",
-            "content": f"""
-    You are answering questions about Aareb.
+        enhanced_messages.append(
+            {
+                "role": "system",
+                "content": (
+                    f"""
+Here is information about Aareb from his resume:
 
-    Use ONLY the resume information below.
+{resume_data}
 
-    DO NOT invent or assume anything.
-
-    If the answer is not clearly present,
-    reply with:
-    "I could not find that information"
-
-    Resume Information:
-    {resume_data}
-    """
-        })
+Answer user questions using this information.
+"""
+                )
+            }
+        )
 
     # =========================
     # LOADING ANIMATION
