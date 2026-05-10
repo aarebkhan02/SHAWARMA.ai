@@ -266,7 +266,7 @@ def search_resume(query, k=1):
     )
 
     # similarity threshold
-    if distances[0][0] > 1.5:
+    if distances[0][0] > 5.0:
         return ""
 
     results = []
@@ -410,6 +410,7 @@ with st.sidebar:
                     "You are Shawarma, a friendly AI chatbot. "
                     "Keep responses short, conversational, and helpful. "
                     "If asked your name, say your name is Shawarma. "
+                    "If asked about Aareb, use the provided resume context only. "
                     "If asked who made you, reply exactly: Aareb made me."
                 )
             }
@@ -430,6 +431,7 @@ if "conversation" not in st.session_state:
                 "You are Shawarma, a friendly AI chatbot. "
                 "Keep responses short, conversational, and helpful. "
                 "If asked your name, say your name is Shawarma. "
+                "If asked about Aareb, use the provided resume context only. "
                 "If asked who made you, reply exactly: Aareb made me."
             )
         }
@@ -678,7 +680,7 @@ Use this information if relevant.
 
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
-        messages=enhanced_messages,
+        messages=enhanced_messages[-10:],
         temperature=0.5,
         max_tokens=120,
         stream=True
