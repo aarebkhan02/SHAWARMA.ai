@@ -239,7 +239,7 @@ def load_rag():
 
     chunk_embeddings = embed_model.encode(
         resume_chunks,
-        convert_to_numpy=True
+        
     )
 
     dimension = len(chunk_embeddings[0])
@@ -257,7 +257,7 @@ def search_resume(query, k=1):
 
     query_embedding = embed_model.encode(
         [query],
-        convert_to_numpy=True
+        
     )
 
     distances, indices = index.search(
