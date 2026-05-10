@@ -204,23 +204,12 @@ tavily = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
 def load_resume():
 
-    pdf_files = [
-        "Aareb_Resume_With_Links.pdf",
-        "Aareb_Links_Page.pdf"
-    ]
+    reader = PdfReader("Aareb_Resume_With_Links.pdf")
 
     text = ""
 
-    for pdf in pdf_files:
-
-        reader = PdfReader(pdf)
-
-        for page in reader.pages:
-
-            extracted = page.extract_text()
-
-            if extracted:
-                text += extracted + "\n"
+    for page in reader.pages:
+        text += page.extract_text()
 
     return text
 
@@ -416,7 +405,20 @@ with st.sidebar:
                     "You are Shawarma, a friendly AI chatbot. "
                     "Keep responses short, conversational, and helpful. "
                     "If asked your name, say your name is Shawarma. "
-                    "If asked who made you, reply exactly: Aareb made me."
+                    "If asked who made you, reply exactly: Aareb made me. "
+
+                    "Here is information about Aareb:\n"
+
+                    "LinkedIn: https://www.linkedin.com/in/aarebkhan/\n"
+                    "GitHub: https://github.com/aarebkhan02\n"
+                    "Modest Hijab Store: https://www.hijabstore.modest.co.in/\n"
+                    "Gmail: aarebkhan02@gmail.com\n"
+                    "E-Commerce Website: https://686ea4cb8712c7440ea1bf03--amodesta.netlify.app/\n"
+                    "Face Mask Detection Application: https://masknomask.streamlit.app/\n"
+
+                    "If users ask about Aareb, his projects, portfolio, "
+                    "socials, links, contact, work, or websites, "
+                    "use this information."
                 )
             }
         ]
@@ -436,7 +438,20 @@ if "conversation" not in st.session_state:
                 "You are Shawarma, a friendly AI chatbot. "
                 "Keep responses short, conversational, and helpful. "
                 "If asked your name, say your name is Shawarma. "
-                "If asked who made you, reply exactly: Aareb made me."
+                "If asked who made you, reply exactly: Aareb made me. "
+
+                "Here is information about Aareb:\n"
+
+                "LinkedIn: https://www.linkedin.com/in/aarebkhan/\n"
+                "GitHub: https://github.com/aarebkhan02\n"
+                "Modest Hijab Store: https://www.hijabstore.modest.co.in/\n"
+                "Gmail: aarebkhan02@gmail.com\n"
+                "E-Commerce Website: https://686ea4cb8712c7440ea1bf03--amodesta.netlify.app/\n"
+                "Face Mask Detection Application: https://masknomask.streamlit.app/\n"
+
+                "If users ask about Aareb, his projects, portfolio, "
+                "socials, links, contact, work, or websites, "
+                "use this information."
             )
         }
     ]
