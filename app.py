@@ -204,12 +204,23 @@ tavily = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
 def load_resume():
 
-    reader = PdfReader("Aareb_Resume_With_Links.pdf")
+    pdf_files = [
+        "Aareb_Resume_With_Links.pdf",
+        "Aareb_Links_Page.pdf"
+    ]
 
     text = ""
 
-    for page in reader.pages:
-        text += page.extract_text()
+    for pdf in pdf_files:
+
+        reader = PdfReader(pdf)
+
+        for page in reader.pages:
+
+            extracted = page.extract_text()
+
+            if extracted:
+                text += extracted + "\n"
 
     return text
 
