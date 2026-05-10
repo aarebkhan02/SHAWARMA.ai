@@ -647,20 +647,20 @@ Use this information if relevant.
         enhanced_messages.append({
             "role": "system",
             "content": f"""
-You are answering questions about Aareb.
+    You are answering questions about Aareb.
 
-Use ONLY the resume information below.
+    Use ONLY the resume information below.
 
-DO NOT invent or assume anything.
+    DO NOT invent or assume anything.
 
-If the answer is not clearly present,
-reply with:
-"I could not find that information in Aareb's resume."
+    If the answer is not clearly present,
+    reply with:
+    "I could not find that information in Aareb's resume."
 
-Resume Information:
-{resume_data}
-"""
-    })
+    Resume Information:
+    {resume_data}
+    """
+        })
 
     # =========================
     # LOADING ANIMATION
