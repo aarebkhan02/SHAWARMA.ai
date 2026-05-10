@@ -655,7 +655,7 @@ Use this information if relevant.
 
     If the answer is not clearly present,
     reply with:
-    "I could not find that information in Aareb's resume."
+    "I could not find that information"
 
     Resume Information:
     {resume_data}
