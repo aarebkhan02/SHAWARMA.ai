@@ -1,5 +1,8 @@
 streamlit
 groq
 pymongo
-datetime
 tavily-python
+faiss-cpu
+sentence-transformers
+PyPDF2
+numpy
