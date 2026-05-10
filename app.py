@@ -193,7 +193,7 @@ from PyPDF2 import PdfReader
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 
 # =========================
 # API CLIENTS
