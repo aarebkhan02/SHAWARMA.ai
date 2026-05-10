@@ -1,11 +1,13 @@
 # import streamlit as st
 # from groq import Groq
+# from tavily import TavilyClient
 # import os
 
+# # from dotenv import load_dotenv
+# # load_dotenv() 
 
 # client = Groq(api_key=os.environ["GROQ_API_KEY"])
-
-
+# tavily = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
 # # PAGE CONFIG
 # st.set_page_config(
@@ -14,36 +16,24 @@
 #     layout="centered"
 # )
 
-
-
-
-
 # st.markdown("""
 # <style>
-# body {
-#     background-color: #0e0e0e;
+# body { background-color: #0e0e0e; }
+# .chat-container { display: flex; flex-direction: column; gap: 14px; padding-bottom: 20px; }
+# .msg-row { 
+#     width: 100%; 
+#     display: flex; 
+#     margin-top: 6px;
 # }
 
-# .chat-container {
-#     display: flex;
-#     flex-direction: column;
-#     gap: 14px;
-#     padding-bottom: 20px;
+# .user-row { 
+#     justify-content: flex-end; 
 # }
 
-# .msg-row {
-#     width: 100%;
-#     display: flex;
+# .bot-row { 
+#     justify-content: flex-start; 
+#     margin-top: 12px;  /* gap between user and AI */
 # }
-
-# .user-row {
-#     justify-content: flex-end;
-# }
-
-# .bot-row {
-#     justify-content: flex-start;
-# }
-
 # .user-msg {
 #     background-color: #85409D;
 #     color: white;
@@ -54,7 +44,6 @@
 #     line-height: 1.4;
 #     word-wrap: break-word;
 # }
-
 # .bot-msg {
 #     background-color: #878787;
 #     color: white;
@@ -65,18 +54,26 @@
 #     line-height: 1.4;
 #     word-wrap: break-word;
 # }
-
-# .header {
-#     text-align: center;
-#     color: #92487A;
-#     margin-bottom: 4px;
+#             .loading {
+#     background-color: #878787;
+#     color: white;
+#     padding: 14px 18px;
+#     border-radius: 18px 18px 18px 4px;
+#     max-width: 72%;
+#     font-size: 15px;
+#     opacity: 0.8;
+#     animation: pulse 1s infinite;
 # }
 
-# .sub {
-#     text-align: center;
-#     color: #aaa;
-#     margin-bottom: 25px;
+# @keyframes pulse {
+#     0% { opacity: 0.4; }
+#     50% { opacity: 1; }
+#     100% { opacity: 0.4; }
 # }
+
+# .header { text-align: center; color: #92487A; }
+# .sub { text-align: center; color: #aaa; margin-bottom: 25px; }
+# .sub1 { text-align: center; color: #aaa; }
 # </style>
 # """, unsafe_allow_html=True)
 
@@ -87,132 +84,162 @@
 #     st.divider()
 
 #     if st.button("Clear Chat"):
-#         st.session_state.conversation = [
-#             {
-#                 "role": "system",
-#                 "content": (
-#                     "You are an AI chatbot named Shawarma. "
-#                     "You are friendly, helpful, and conversational. "
-#                     "You are friendly, helpful, and casual with a friendly tone."
-#                     "If anyone asks your name, you must say your name is Shawarma. "
-#                     "If anyone asks who made you or who created you, "
-#                     "you must reply with exactly: Aareb made me."
-
-#                 )
-#             }
-#         ]
+#         st.session_state.conversation = [{
+#             "role": "system",
+#             "content": (
+#                 "You are an AI chatbot named Shawarma. "
+#                 "You are friendly, helpful, and conversational. "
+#                 "You are friendly, helpful, and casual with a friendly tone. "
+#                 "If anyone asks your name, you must say your name is Shawarma. "
+#                 "If anyone asks who made you or who created you, "
+#                 "you must reply with exactly: Aareb made me."
+#                 "If the user says goodbye, bye, end the conversation, or anything similar, "
+#                 "you must respond with a short paragraph goodbye message that includes a fun shawarma-related reference, "
+#             )
+#         }]
 #         st.rerun()
-
 
 # # SESSION STATE
 # if "conversation" not in st.session_state:
-#     st.session_state.conversation = [
-#     {
+#     st.session_state.conversation = [{
 #         "role": "system",
 #         "content": (
 #             "You are an AI chatbot named Shawarma. "
 #             "You are friendly, helpful, and conversational. "
-#             "You are friendly, helpful, and casual  with a friendly tone."
+#             "You are friendly, helpful, and casual with a friendly tone. "
 #             "If anyone asks your name, you must say your name is Shawarma. "
 #             "If anyone asks who made you or who created you, "
 #             "you must reply with exactly: Aareb made me."
-
+#             "If the user says goodbye, bye, end the conversation, or anything similar, "
+#             "you must respond with a short paragraph goodbye message that includes a fun shawarma-related reference, "
 #         )
-#     }
-# ]
 
+#     }]
 
 # # HEADER
 # st.markdown('<h1 class="header">🥙 SHAWARMAA</h1>', unsafe_allow_html=True)
+# st.markdown('<p class="sub1">With an extra A :)</p>', unsafe_allow_html=True)
 # st.markdown('<p class="sub">Your friendly AI assistant</p>', unsafe_allow_html=True)
 
-# # CHAT
+# # CHAT UI
 # st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
 # for msg in st.session_state.conversation:
 #     if msg["role"] == "user":
-#         st.markdown(
-#             f"""
-#             <div class="msg-row user-row">
-#                 <div class="user-msg">{msg["content"]}</div>
-#             </div>
-#             """,
-#             unsafe_allow_html=True
-#         )
+#         st.markdown(f"""
+#         <div class="msg-row user-row">
+#             <div class="user-msg">{msg["content"]}</div>
+#         </div>""", unsafe_allow_html=True)
 
 #     elif msg["role"] == "assistant":
-#         st.markdown(
-#             f"""
-#             <div class="msg-row bot-row">
-#                 <div class="bot-msg">{msg["content"]}</div>
-#             </div>
-#             """,
-#             unsafe_allow_html=True
-#         )
+#         st.markdown(f"""
+#         <div class="msg-row bot-row">
+#             <div class="bot-msg">{msg["content"]}</div>
+#         </div>""", unsafe_allow_html=True)
 
 # st.markdown('</div>', unsafe_allow_html=True)
+
+# #  TAVILY SEARCH FUNCTION
+# def search_web(query):
+#     try:
+#         response = tavily.search(
+#             query=query,
+#             search_depth="advanced",
+#             max_results=5
+#         )
+#         results = []
+#         for r in response["results"]:
+#             results.append(f"{r['title']} - {r['url']}\n{r['content']}")
+#         return "\n\n".join(results)
+#     except:
+#         return "Sorry I dont know :("
 
 # # INPUT
 # user_input = st.chat_input("Type your message...")
 
 # if user_input:
-#     st.session_state.conversation.append(
-#         {"role": "user", "content": user_input}
-#     )
+#     st.session_state.conversation.append({"role": "user", "content": user_input})
+
+#     # Decide if search needed
+#     keywords = ["latest", "news", "today", "current", "now", "price", "who won", "update","time"]
+#     if any(word in user_input.lower() for word in keywords):
+#         web_data = search_web(user_input)
+#     else:
+#         web_data = "No web search needed."
+
+#     enhanced_messages = st.session_state.conversation.copy()
+#     enhanced_messages.append({
+#         "role": "system",
+#         "content": f"Here is latest information from the web:\n{web_data}"
+#     })
 
 #     res = client.chat.completions.create(
 #         model="llama-3.1-8b-instant",
-#         messages=st.session_state.conversation,
+#         messages=enhanced_messages,
 #         temperature=0.7,
 #         max_tokens=200
 #     )
 
 #     assistant_reply = res.choices[0].message.content
-
-#     st.session_state.conversation.append(
-#         {"role": "assistant", "content": assistant_reply}
-#     )
+#     st.session_state.conversation.append({"role": "assistant", "content": assistant_reply})
 
 #     st.rerun()
-
-
 
 import streamlit as st
 from groq import Groq
 from tavily import TavilyClient
 import os
 
-# from dotenv import load_dotenv
-# load_dotenv() 
+# =========================
+# API CLIENTS
+# =========================
 
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 tavily = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
+# =========================
 # PAGE CONFIG
+# =========================
+
 st.set_page_config(
     page_title="SHAWARMAA",
     page_icon="🥙",
     layout="centered"
 )
 
+# =========================
+# CUSTOM CSS
+# =========================
+
 st.markdown("""
 <style>
-body { background-color: #0e0e0e; }
-.chat-container { display: flex; flex-direction: column; gap: 14px; padding-bottom: 20px; }
-.msg-row { 
-    width: 100%; 
-    display: flex; 
+
+body {
+    background-color: #0e0e0e;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 20px;
+}
+
+.msg-row {
+    width: 100%;
+    display: flex;
     margin-top: 6px;
 }
 
-.user-row { 
-    justify-content: flex-end; 
+.user-row {
+    justify-content: flex-end;
 }
 
-.bot-row { 
-    justify-content: flex-start; 
-    margin-top: 12px;  /* gap between user and AI */
+.bot-row {
+    justify-content: flex-start;
+    margin-top: 12px;
 }
+
 .user-msg {
     background-color: #85409D;
     color: white;
@@ -220,9 +247,10 @@ body { background-color: #0e0e0e; }
     border-radius: 18px 18px 4px 18px;
     max-width: 72%;
     font-size: 15px;
-    line-height: 1.4;
+    line-height: 1.5;
     word-wrap: break-word;
 }
+
 .bot-msg {
     background-color: #878787;
     color: white;
@@ -230,10 +258,11 @@ body { background-color: #0e0e0e; }
     border-radius: 18px 18px 18px 4px;
     max-width: 72%;
     font-size: 15px;
-    line-height: 1.4;
+    line-height: 1.5;
     word-wrap: break-word;
 }
-            .loading {
+
+.loading {
     background-color: #878787;
     color: white;
     padding: 14px 18px;
@@ -250,117 +279,288 @@ body { background-color: #0e0e0e; }
     100% { opacity: 0.4; }
 }
 
-.header { text-align: center; color: #92487A; }
-.sub { text-align: center; color: #aaa; margin-bottom: 25px; }
-.sub1 { text-align: center; color: #aaa; }
+.header {
+    text-align: center;
+    color: #92487A;
+}
+
+.sub {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 25px;
+}
+
+.sub1 {
+    text-align: center;
+    color: #aaa;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
+# =========================
 # SIDEBAR
+# =========================
+
 with st.sidebar:
+
     st.markdown("## 🥙 SHAWARMAA")
     st.markdown("Friendly AI chatbot")
     st.divider()
 
     if st.button("Clear Chat"):
-        st.session_state.conversation = [{
-            "role": "system",
-            "content": (
-                "You are an AI chatbot named Shawarma. "
-                "You are friendly, helpful, and conversational. "
-                "You are friendly, helpful, and casual with a friendly tone. "
-                "If anyone asks your name, you must say your name is Shawarma. "
-                "If anyone asks who made you or who created you, "
-                "you must reply with exactly: Aareb made me."
-                "If the user says goodbye, bye, end the conversation, or anything similar, "
-                "you must respond with a short paragraph goodbye message that includes a fun shawarma-related reference, "
-            )
-        }]
+
+        st.session_state.conversation = [
+            {
+                "role": "system",
+                "content": (
+                    "You are Shawarma, a friendly AI chatbot. "
+                    "Keep responses short, conversational, and helpful. "
+                    "If asked your name, say your name is Shawarma. "
+                    "If asked who made you, reply exactly: Aareb made me."
+                )
+            }
+        ]
+
         st.rerun()
 
+# =========================
 # SESSION STATE
+# =========================
+
 if "conversation" not in st.session_state:
-    st.session_state.conversation = [{
-        "role": "system",
-        "content": (
-            "You are an AI chatbot named Shawarma. "
-            "You are friendly, helpful, and conversational. "
-            "You are friendly, helpful, and casual with a friendly tone. "
-            "If anyone asks your name, you must say your name is Shawarma. "
-            "If anyone asks who made you or who created you, "
-            "you must reply with exactly: Aareb made me."
-            "If the user says goodbye, bye, end the conversation, or anything similar, "
-            "you must respond with a short paragraph goodbye message that includes a fun shawarma-related reference, "
-        )
 
-    }]
+    st.session_state.conversation = [
+        {
+            "role": "system",
+            "content": (
+                "You are Shawarma, a friendly AI chatbot. "
+                "Keep responses short, conversational, and helpful. "
+                "If asked your name, say your name is Shawarma. "
+                "If asked who made you, reply exactly: Aareb made me."
+            )
+        }
+    ]
 
+# =========================
 # HEADER
-st.markdown('<h1 class="header">🥙 SHAWARMAA</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub1">With an extra A :)</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub">Your friendly AI assistant</p>', unsafe_allow_html=True)
+# =========================
 
-# CHAT UI
+st.markdown(
+    '<h1 class="header">🥙 SHAWARMAA</h1>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<p class="sub1">With an extra A :)</p>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<p class="sub">Your friendly AI assistant</p>',
+    unsafe_allow_html=True
+)
+
+# =========================
+# CHAT DISPLAY
+# =========================
+
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
 for msg in st.session_state.conversation:
+
     if msg["role"] == "user":
+
         st.markdown(f"""
         <div class="msg-row user-row">
             <div class="user-msg">{msg["content"]}</div>
-        </div>""", unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
 
     elif msg["role"] == "assistant":
+
         st.markdown(f"""
         <div class="msg-row bot-row">
             <div class="bot-msg">{msg["content"]}</div>
-        </div>""", unsafe_allow_html=True)
+        </div>
+        """, unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# 🔎 TAVILY SEARCH FUNCTION
+# =========================
+# FAST TAVILY SEARCH
+# =========================
+
+@st.cache_data(ttl=300)
 def search_web(query):
+
     try:
+
         response = tavily.search(
             query=query,
-            search_depth="advanced",
-            max_results=5
+            search_depth="basic",
+            max_results=2
         )
-        results = []
-        for r in response["results"]:
-            results.append(f"{r['title']} - {r['url']}\n{r['content']}")
-        return "\n\n".join(results)
-    except:
-        return "Sorry I dont know :("
 
-# INPUT
+        results = []
+
+        for r in response["results"]:
+
+            results.append(
+                f"{r['title']}\n{r['content']}"
+            )
+
+        return "\n\n".join(results)
+
+    except Exception:
+
+        return ""
+
+# =========================
+# SEARCH DETECTION
+# =========================
+
+search_keywords = [
+    "latest",
+    "news",
+    "today",
+    "current",
+    "now",
+    "price",
+    "weather",
+    "score",
+    "match",
+    "who won",
+    "update",
+    "stock",
+    "bitcoin",
+    "time"
+]
+
+# =========================
+# USER INPUT
+# =========================
+
 user_input = st.chat_input("Type your message...")
 
 if user_input:
-    st.session_state.conversation.append({"role": "user", "content": user_input})
 
-    # Decide if search needed
-    keywords = ["latest", "news", "today", "current", "now", "price", "who won", "update","time"]
-    if any(word in user_input.lower() for word in keywords):
-        web_data = search_web(user_input)
-    else:
-        web_data = "No web search needed."
-
-    enhanced_messages = st.session_state.conversation.copy()
-    enhanced_messages.append({
-        "role": "system",
-        "content": f"Here is latest information from the web:\n{web_data}"
-    })
-
-    res = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=enhanced_messages,
-        temperature=0.7,
-        max_tokens=200
+    # ADD USER MESSAGE
+    st.session_state.conversation.append(
+        {
+            "role": "user",
+            "content": user_input
+        }
     )
 
-    assistant_reply = res.choices[0].message.content
-    st.session_state.conversation.append({"role": "assistant", "content": assistant_reply})
+    # SHOW USER MESSAGE INSTANTLY
+
+    st.markdown(f"""
+    <div class="msg-row user-row">
+        <div class="user-msg">{user_input}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # =========================
+    # SEARCH LOGIC
+    # =========================
+
+    query_lower = user_input.lower()
+
+    needs_search = any(
+        word in query_lower
+        for word in search_keywords
+    )
+
+    web_data = search_web(user_input) if needs_search else ""
+
+    # =========================
+    # ENHANCED PROMPT
+    # =========================
+
+    enhanced_messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are Shawarma, a fast, friendly AI chatbot. "
+                "Keep responses concise and conversational. "
+                "If asked your name, say your name is Shawarma. "
+                "If asked who made you, reply exactly: Aareb made me."
+            )
+        }
+    ]
+
+    enhanced_messages.extend(st.session_state.conversation)
+
+    if web_data:
+
+        enhanced_messages.append(
+            {
+                "role": "system",
+                "content": (
+                    f"Latest web information:\n{web_data}"
+                )
+            }
+        )
+
+    # =========================
+    # LOADING ANIMATION
+    # =========================
+
+    loading_placeholder = st.empty()
+
+    loading_placeholder.markdown("""
+    <div class="msg-row bot-row">
+        <div class="loading">Typing...</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # =========================
+    # STREAMING RESPONSE
+    # =========================
+
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=enhanced_messages,
+        temperature=0.5,
+        max_tokens=120,
+        stream=True
+    )
+
+    # REMOVE LOADING
+    loading_placeholder.empty()
+
+    # =========================
+    # LIVE RESPONSE UI
+    # =========================
+
+    response_placeholder = st.empty()
+
+    full_response = ""
+
+    for chunk in response:
+
+        content = chunk.choices[0].delta.content
+
+        if content:
+
+            full_response += content
+
+            response_placeholder.markdown(f"""
+            <div class="msg-row bot-row">
+                <div class="bot-msg">{full_response}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # =========================
+    # SAVE RESPONSE
+    # =========================
+
+    st.session_state.conversation.append(
+        {
+            "role": "assistant",
+            "content": full_response
+        }
+    )
 
     st.rerun()
-
