@@ -636,20 +636,23 @@ Use this information if relevant.
 
     if resume_data:
 
-        enhanced_messages.append(
-            {
-                "role": "system",
-                "content": (
-                    f"You are answering questions about Aareb.\n\n"
-                    f"Use ONLY the resume information below.\n\n"
-                    f"DO NOT invent or assume anything.\n\n"
-                    f"If the answer is not clearly present, "
-                    f"reply with: "
-                    f"'I could not find that information.'\n\n"
-                    f"Resume Information:\n{resume_data}"
-                )
-            }
-        )
+        enhanced_messages.append({
+            "role": "system",
+            "content": f"""
+    You are answering questions about Aareb.
+
+    Use ONLY the resume information below.
+
+    DO NOT invent or assume anything.
+
+    If the answer is not clearly present,
+    reply with:
+    "I could not find that information"
+
+    Resume Information:
+    {resume_data}
+    """
+        })
 
     # =========================
     # LOADING ANIMATION
