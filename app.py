@@ -204,7 +204,7 @@ tavily = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
 def load_resume():
 
-    reader = PdfReader("AAREB RESUME.pdf")
+    reader = PdfReader("Aareb_Resume_With_Links.pdf")
 
     text = ""
 
@@ -225,32 +225,42 @@ def chunk_text(text, chunk_size=500):
 
 
 
-embed_model = SentenceTransformer(
-    "all-MiniLM-L6-v2"
+@st.cache_resource
+def load_rag():
+
+    embed_model = SentenceTransformer(
+        "all-MiniLM-L6-v2"
+    )
+
+    resume_text = load_resume()
+
+    resume_chunks = chunk_text(resume_text)
+
+    chunk_embeddings = embed_model.encode(
+    resume_chunks,
+    convert_to_numpy=True
 )
 
-resume_text = load_resume()
+    dimension = len(chunk_embeddings[0])
 
-resume_chunks = chunk_text(resume_text)
+    index = faiss.IndexFlatL2(dimension)
 
-chunk_embeddings = embed_model.encode(
-    resume_chunks
-)
+    index.add(chunk_embeddings.astype("float32"))
 
-dimension = len(chunk_embeddings[0])
-
-index = faiss.IndexFlatL2(dimension)
-
-index.add(np.array(chunk_embeddings))
+    return embed_model, index, resume_chunks
+embed_model, index, resume_chunks = load_rag()
 
 
 
 def search_resume(query, k=2):
 
-    query_embedding = embed_model.encode([query])
+    query_embedding = embed_model.encode(
+        [query],
+        convert_to_numpy=True
+    )
 
     distances, indices = index.search(
-        np.array(query_embedding),
+        query_embedding.astype("float32"),
         k
     )
 
@@ -260,7 +270,6 @@ def search_resume(query, k=2):
         results.append(resume_chunks[idx])
 
     return "\n".join(results)
-
 
 
 resume_keywords = [
@@ -599,9 +608,10 @@ if user_input:
 
     # ADD CHAT HISTORY
 
-    enhanced_messages.extend(
-        st.session_state.conversation
-    )
+    for msg in st.session_state.conversation:
+
+        if msg["role"] != "system":
+            enhanced_messages.append(msg)
 
     # =========================
     # ADD WEB CONTEXT
@@ -706,4 +716,4 @@ Answer user questions using this information.
         }
     )
 
-    st.rerun()
+    
