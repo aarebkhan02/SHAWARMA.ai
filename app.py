@@ -215,7 +215,7 @@ def load_resume():
     return text
 
 
-def chunk_text(text, chunk_size=250):
+def chunk_text(text, chunk_size=300):
 
     chunks = []
 
@@ -266,7 +266,7 @@ def search_resume(query, k=1):
     )
 
     # similarity threshold
-    if distances[0][0] > 5.0:
+    if distances[0][0] > 2.0:
         return ""
 
     results = []
