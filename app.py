@@ -215,7 +215,7 @@ def load_resume():
     return text
 
 
-def chunk_text(text, chunk_size=300):
+def chunk_text(text, chunk_size=400):
 
     chunks = []
 
