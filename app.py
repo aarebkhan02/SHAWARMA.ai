@@ -204,7 +204,7 @@ tavily = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
 def load_resume():
 
-    reader = PdfReader("resume.pdf")
+    reader = PdfReader("AAREB RESUME.pdf")
 
     text = ""
 
