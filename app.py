@@ -189,6 +189,10 @@ import streamlit as st
 from groq import Groq
 from tavily import TavilyClient
 import os
+from PyPDF2 import PdfReader
+from sentence_transformers import SentenceTransformer
+import faiss
+import numpy as np
 
 # =========================
 # API CLIENTS
@@ -196,6 +200,81 @@ import os
 
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 tavily = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
+
+
+def load_resume():
+
+    reader = PdfReader("resume.pdf")
+
+    text = ""
+
+    for page in reader.pages:
+        text += page.extract_text()
+
+    return text
+
+
+def chunk_text(text, chunk_size=500):
+
+    chunks = []
+
+    for i in range(0, len(text), chunk_size):
+        chunks.append(text[i:i+chunk_size])
+
+    return chunks
+
+
+
+embed_model = SentenceTransformer(
+    "all-MiniLM-L6-v2"
+)
+
+resume_text = load_resume()
+
+resume_chunks = chunk_text(resume_text)
+
+chunk_embeddings = embed_model.encode(
+    resume_chunks
+)
+
+dimension = len(chunk_embeddings[0])
+
+index = faiss.IndexFlatL2(dimension)
+
+index.add(np.array(chunk_embeddings))
+
+
+
+def search_resume(query, k=2):
+
+    query_embedding = embed_model.encode([query])
+
+    distances, indices = index.search(
+        np.array(query_embedding),
+        k
+    )
+
+    results = []
+
+    for idx in indices[0]:
+        results.append(resume_chunks[idx])
+
+    return "\n".join(results)
+
+
+
+resume_keywords = [
+    "aareb",
+    "resume",
+    "skills",
+    "projects",
+    "internship",
+    "experience",
+    "education",
+    "who made you",
+    "developer",
+    "creator"
+]
 
 # =========================
 # PAGE CONFIG
@@ -445,7 +524,10 @@ user_input = st.chat_input("Type your message...")
 
 if user_input:
 
-    # ADD USER MESSAGE
+    # =========================
+    # SAVE USER MESSAGE
+    # =========================
+
     st.session_state.conversation.append(
         {
             "role": "user",
@@ -462,20 +544,45 @@ if user_input:
     """, unsafe_allow_html=True)
 
     # =========================
-    # SEARCH LOGIC
+    # SEARCH DETECTION
     # =========================
 
     query_lower = user_input.lower()
+
+    # WEB SEARCH CHECK
 
     needs_search = any(
         word in query_lower
         for word in search_keywords
     )
 
-    web_data = search_web(user_input) if needs_search else ""
+    # RESUME SEARCH CHECK
+
+    needs_resume = any(
+        word in query_lower
+        for word in resume_keywords
+    )
 
     # =========================
-    # ENHANCED PROMPT
+    # GET WEB DATA
+    # =========================
+
+    web_data = ""
+
+    if needs_search:
+        web_data = search_web(user_input)
+
+    # =========================
+    # GET RESUME DATA
+    # =========================
+
+    resume_data = ""
+
+    if needs_resume:
+        resume_data = search_resume(user_input)
+
+    # =========================
+    # CREATE MESSAGES
     # =========================
 
     enhanced_messages = [
@@ -490,7 +597,15 @@ if user_input:
         }
     ]
 
-    enhanced_messages.extend(st.session_state.conversation)
+    # ADD CHAT HISTORY
+
+    enhanced_messages.extend(
+        st.session_state.conversation
+    )
+
+    # =========================
+    # ADD WEB CONTEXT
+    # =========================
 
     if web_data:
 
@@ -498,7 +613,34 @@ if user_input:
             {
                 "role": "system",
                 "content": (
-                    f"Latest web information:\n{web_data}"
+                    f"""
+Latest web information:
+
+{web_data}
+
+Use this information if relevant.
+"""
+                )
+            }
+        )
+
+    # =========================
+    # ADD RESUME CONTEXT
+    # =========================
+
+    if resume_data:
+
+        enhanced_messages.append(
+            {
+                "role": "system",
+                "content": (
+                    f"""
+Here is information about Aareb from his resume:
+
+{resume_data}
+
+Answer user questions using this information.
+"""
                 )
             }
         )
@@ -528,6 +670,7 @@ if user_input:
     )
 
     # REMOVE LOADING
+
     loading_placeholder.empty()
 
     # =========================
@@ -553,7 +696,7 @@ if user_input:
             """, unsafe_allow_html=True)
 
     # =========================
-    # SAVE RESPONSE
+    # SAVE ASSISTANT RESPONSE
     # =========================
 
     st.session_state.conversation.append(
