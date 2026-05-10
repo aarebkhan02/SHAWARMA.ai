@@ -214,7 +214,7 @@ def load_resume():
     return text
 
 
-def chunk_text(text, chunk_size=500):
+def chunk_text(text, chunk_size=250):
 
     chunks = []
 
@@ -252,7 +252,7 @@ embed_model, index, resume_chunks = load_rag()
 
 
 
-def search_resume(query, k=2):
+def search_resume(query, k=1):
 
     query_embedding = embed_model.encode(
         [query],
@@ -263,6 +263,10 @@ def search_resume(query, k=2):
         query_embedding.astype("float32"),
         k
     )
+
+    # similarity threshold
+    if distances[0][0] > 1.5:
+        return ""
 
     results = []
 
@@ -280,9 +284,9 @@ resume_keywords = [
     "internship",
     "experience",
     "education",
-    "who made you",
-    "developer",
-    "creator"
+    "tech stack",
+    "what does he know",
+    "who made you"
 ]
 
 # =========================
@@ -640,20 +644,23 @@ Use this information if relevant.
 
     if resume_data:
 
-        enhanced_messages.append(
-            {
-                "role": "system",
-                "content": (
-                    f"""
-Here is information about Aareb from his resume:
+        enhanced_messages.append({
+            "role": "system",
+            "content": f"""
+You are answering questions about Aareb.
 
+Use ONLY the resume information below.
+
+DO NOT invent or assume anything.
+
+If the answer is not clearly present,
+reply with:
+"I could not find that information in Aareb's resume."
+
+Resume Information:
 {resume_data}
-
-Answer user questions using this information.
 """
-                )
-            }
-        )
+    })
 
     # =========================
     # LOADING ANIMATION
