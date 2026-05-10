@@ -277,18 +277,7 @@ def search_resume(query, k=1):
     return "\n".join(results)
 
 
-resume_keywords = [
-    "aareb",
-    "resume",
-    "skills",
-    "projects",
-    "internship",
-    "experience",
-    "education",
-    "tech stack",
-    "what does he know",
-    "who made you"
-]
+resume_keywords = [ "aareb", "resume", "skills", "projects", "internship", "experience", "education", "who made you", "developer", "creator" ]
 
 # =========================
 # PAGE CONFIG
